@@ -4,3 +4,4 @@ source "$cwd/functions.sh"
 echo "$cwd/functions.sh"
 readHosts
 
+ 

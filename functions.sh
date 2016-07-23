@@ -87,3 +87,4 @@ checkSelfForCerts() {
         echo "Present"
     fi
 }
+ 
