@@ -3,4 +3,3 @@ router,root,10.0.0.1,22
 fog,root,10.0.0.4,22
 node,root,10.0.0.7,22
 application,root,10.0.0.8,22
- 

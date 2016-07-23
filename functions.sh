@@ -71,7 +71,7 @@ checkOrInstallPackage() {
     fi
 }
 checkSelfForCerts() {
-#Check for ssh pki files, if none, make them.
+    #Check for ssh pki files, if none, make them.
     dots "Checking for SSH PKI files on self"
     if [[ ! -e $HOME/.ssh/id_rsa || ! -s $HOME/.ssh/id_rsa || ! -e $HOME/.ssh/id_rsa.pub || ! -s $HOME/.ssh/id_rsa.pub ]]; then
         echo "Not present"
@@ -87,4 +87,3 @@ checkSelfForCerts() {
         echo "Present"
     fi
 }
- 
