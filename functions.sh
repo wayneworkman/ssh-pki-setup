@@ -1,41 +1,37 @@
+#!/bin/bash
 dots() {
     local pad=$(printf "%0.1s" "."{1..70})
     printf " * %s%*.*s" "$1" 0 $((70-${#1})) "$pad"
     return 0
 }
 readHosts() {
-hostsFile="${cwd}/hosts.csv"
-OLDIFS=$IFS
-IFS=","
-declare -a all-alias
-declare -a all-user
-declare -a all-address
-declare -a all-port
-all-alias()
-dots "Reading $hostsFile"
-[ ! -f $hostsFile ] && { echo "$hostsFile file not found"; exit 99; }
-while read alias user address port
-do
-    all-alias+=('$alias')
-    all-user+=('$user')
-    all-address+=('$address')
-    all-port+=('$port')
-done < $INPUT
-IFS="$OLDIFS"
-echo "Done"
+    hostsFile="${cwd}/hosts.csv"
+    OLDIFS=$IFS
+    IFS=","
+    dots "Reading $hostsFile"
+    [ ! -f $hostsFile ] && { echo "$hostsFile file not found"; exit 99; }
+    while read alias user address port
+    do
+        allAlias+=($alias)
+        allUser+=($user)
+        allAddress+=($address)
+        allPort+=($port)
+    done < $INPUT
+    IFS="$OLDIFS"
+    echo "Done"
 }
 checkPkiAccess() {
-        address="$1"
-        account="$2"
-        dots "Checking access to $address using account $account"
-        pkiSet=$(ssh -o BatchMode=yes -o ConnectTimeout=5 $nodeUser@$ngmHostname "echo 'true'" 2>&1)
-        if [[ "$pkiSet" == "true" ]]; then
-            echo "Authorized"
-        elif [[ "$pkiSet" == "Permission denied"* ]]; then
-            echo "Not Authorized"
-        else
-            echo "Error!"
-        fi
+    address="$1"
+    account="$2"
+    dots "Checking access to $address using account $account"
+    pkiSet=$(ssh -o BatchMode=yes -o ConnectTimeout=5 $nodeUser@$ngmHostname "echo 'true'" 2>&1)
+    if [[ "$pkiSet" == "true" ]]; then
+        echo "Authorized"
+    elif [[ "$pkiSet" == "Permission denied"* ]]; then
+        echo "Not Authorized"
+    else
+        echo "Error!"
+    fi
 }
 checkOrInstallPackage() {
     package="$1"
@@ -71,6 +67,7 @@ checkOrInstallPackage() {
             fi
         else
             echo "Unable to determine repository manager"
+        fi
     fi
 }
 checkSelfForCerts() {
