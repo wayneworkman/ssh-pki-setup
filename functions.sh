@@ -16,7 +16,7 @@ readHosts() {
         allUser+=($user)
         allAddress+=($address)
         allPort+=($port)
-    done < $INPUT
+    done < $hostsFile
     IFS="$OLDIFS"
     echo "Done"
 }
