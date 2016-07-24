@@ -11,8 +11,8 @@ passwords during installation. The header is required to be present, please do n
 remove it.
 
 The alias field is what will be used to define aliases for the remote systems. To use
-an alias at CLI, simply type the alias and hit enter. If ssh pki access is setup for
-that remote system, you'll fall into it's CLI as root.
+an alias at CLI, simply type `ssh` followed by a space and then the alias and hit enter. 
+If ssh pki access is setup for that remote system, you'll fall into it's CLI as root.
 
 The account field is the account to be used for setitng up the ssh pki access. This
 account must be able to become root via the command `sudo -i`.
