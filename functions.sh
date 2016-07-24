@@ -75,6 +75,7 @@ askForPassword() {
             fi
         fi
     done
+    echo $password
 }
 checkPkiAccess() {
     local address="$1"
