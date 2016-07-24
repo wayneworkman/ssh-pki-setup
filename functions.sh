@@ -16,28 +16,17 @@ echo " |___/___/_| |_| | .__/|_|\_\_| |___/\___|\__|\__,_| .__/ ";
 echo "                 | |                               | |    ";
 echo "                 |_|                               |_|    ";
 echo
-echo 
+echo
 echo
 }
 readHosts() {
     hostsFile="${cwd}/hosts.csv"
-    OLDIFS=$IFS
-    IFS=","
     dots "Reading \"$hostsFile\""
-    declare -A allAlias=()
-    declare -A allAccount=()
-    declare -A allAddress=()
-    declare -A allPort=()
     [ ! -f $hostsFile ] && { echo "$hostsFile file not found"; exit 99; }
-    while read alias account address port
-    do
-        declare -A allAlias+=("$alias")
-        declare -A allAccount+=("$account")
-        declare -A allAddress+=("$address")
-        declare -A allPort+=("$port")
-    done < <(tr -d '\r' < "$hostsFile")
-    #done < $hostsFile
-    IFS="$OLDIFS"
+    readarray -t allAlias < <(cut -d, -f1 $hostsFile)
+    readarray -t allAccount < <(cut -d, -f2 $hostsFile)
+    readarray -t allAddress < <(cut -d, -f3 $hostsFile)
+    readarray -t allPort < <(cut -d, -f4 $hostsFile)
     echo "Done"
 }
 checkPkiAccess() {
