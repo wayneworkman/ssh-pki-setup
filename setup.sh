@@ -11,7 +11,12 @@ for ((i=0;i<${#allAddress[@]};++i)); do
     checkPkiAccess "${allAddress[i]}" "${allAccount[i]}" "${allPort[i]}"
     if [[ $? -eq 1 ]]; then
         password="${allPass[i]}"
-        [[ -z $password ]] && password=$(askForPassword "${allAddress[i]}" "${allAccount[i]}" "${allPort[i]}") || userHasRoot "${allAddress[i]}" "${allAccount[i]}" "$password" "${allPort[i]}"
+        if [[ -z $password ]]; then
+            askForPassword "${allAddress[i]}" "${allAccount[i]}" "${allPort[i]}"
+            password="$?"
+        else
+            userHasRoot "${allAddress[i]}" "${allAccount[i]}" "$password" "${allPort[i]}"
+        fi
         if [[ $? -eq 0 ]]; then
             echo "Here 1"
             password="${allPass[i]}"
