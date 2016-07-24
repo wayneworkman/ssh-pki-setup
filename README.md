@@ -6,7 +6,7 @@
 
  1. Clone the repository:
 
-  - **git** `git clone https://github.com/wayneworkman/ssh-pki-setup.git
+  - **git** `git clone https://github.com/wayneworkman/ssh-pki-setup.git`
 
  2. Change to the ssh-pki-directory:
 
