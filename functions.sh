@@ -39,8 +39,12 @@ userHasRoot() {
     local account="$2"
     local password="$3"
     local port="$4"
-    local userHasRoot=$(sshpass -p$password ssh -o StrictHostKeyChecking=no -o LogLevel=ERROR -o Port=$port $account@$address "echo $password | sudo -i > /dev/null 2>&1;echo \$?")
-    return $userHasRoot
+    local userHasRoot=$(sshpass -p$password ssh -o StrictHostKeyChecking=no -o LogLevel=ERROR -o Port=$port $account@$address "echo $password | sudo -S 'whoami'")
+    if [[ "$userHasRoot" == "root" ]]; then
+        return 0
+    else
+        return 1
+    fi
 }
 askForPassword() {
     local address="$1"
@@ -65,6 +69,7 @@ askForPassword() {
         else
             userHasRoot "$address" "$account" "$password" "$port"
             if [[ $? -eq 0 ]]; then
+                ${allPass[i]}=$password
                 return 0
             else
                 echo
