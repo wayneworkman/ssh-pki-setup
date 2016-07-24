@@ -60,8 +60,6 @@ correct permissions, such as 600.
 
  - Define the systems you wish to setup inside of the working directory, in hosts.csv.
 Columns within this file must maintain their order, and the header must be maintained.
-If you wish, you may leave the some or all of the password column blank but will have
-to manually key in the missing passwords during installation.
 
  - The alias field is what will be used to define aliases for the remote systems. To use
 an alias at CLI, simply type `ssh` followed by a space and then the alias and hit enter.
