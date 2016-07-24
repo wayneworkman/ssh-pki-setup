@@ -7,18 +7,10 @@ checkOrInstallPackage sshpass
 checkSelfForCerts
 readHosts
 
-for i in "${allAddress[@]}"
-do
-
-    checkPkiAccess ${allAddress[$i]} ${allAccount[$i]}
-    if [[ "$?" -eq "1" ]]; then
-        echo "need pki"
-
-
-
-
-    fi
-    #    "${allAddress[$i]}"
-    #    "${allPort[$i]}"
-
+cnt=0
+for i in "${allAddress[@]}"; do
+    checkPkiAccess $i ${allAccount[$cnt]};
+    [[ ! $? -eq 0 ]] && echo "need pki"
+    let cnt+=1
 done
+cnt=0
