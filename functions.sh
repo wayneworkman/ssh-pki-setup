@@ -27,22 +27,28 @@ readHosts() {
     readarray -t allAccount < <(cut -d, -f2 $hostsFile)
     readarray -t allAddress < <(cut -d, -f3 $hostsFile)
     readarray -t allPort < <(cut -d, -f4 $hostsFile)
+    allAlias=("${allAlias[@]:1}")
+    allAccount=("${allAccount[@]:1}")
+    allAddress=("${allAddress[@]:1}")
+    allPort=("${allPort[@]:1}")
     echo "Done"
 }
 checkPkiAccess() {
     address="$1"
     account="$2"
     dots "Checking access to $address using account $account"
-    pkiSet=$(ssh -o BatchMode=yes -o ConnectTimeout=5 $nodeUser@$ngmHostname "echo 'true'" 2>&1)
-    if [[ "$pkiSet" == "true" ]]; then
-        echo "Authorized"
-        return 0
-    elif [[ "$pkiSet" == "Permission denied"* ]]; then
-        echo "Not Authorized"
-        return 1
+    ping -i 5 -c 1 $address > /dev/null 2>&1
+    if [[ $? -eq 0 ]]; then
+        pkiSet=$(ssh -o BatchMode=yes -o ConnectTimeout=5 $account@$address "echo 'true'" 2>&1)
+        if [[ "$pkiSet" == "true" ]]; then
+            echo "Authorized"
+            return 0
+        else [[ "$pkiSet" == "Permission denied"* ]]; then
+            echo "Not Authorized"
+            return 1
+        fi
     else
-        echo "Error!"
-        return 2
+        echo "Address \"$address\" did not respond to ping!"
     fi
 }
 setupPki() {
@@ -67,6 +73,8 @@ setupPki() {
             echo "  You must to provide a different account for this address."
             echo
         fi
+    else
+        echo "Address \"$address\" did not respond to ping!"
     fi
 
 
