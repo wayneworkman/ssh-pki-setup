@@ -68,19 +68,14 @@ askForPassword() {
             return 0
         else
             userHasRoot "$address" "$account" "$password" "$port"
-            if [[ $? -eq 0 ]]; then
-                ${allPass[i]}=$password
-                return 0
-            else
-                echo
-                echo "  Either account \"$account\" cannot become root, or"
-                echo "  the password is bad/required. Please try again."
-                echo
-                password=""
-            fi
+            [[ $? -eq 0 ]] && return "$password"
+            echo
+            echo "  Either account \"$account\" cannot become root, or"
+            echo "  the password is bad/required. Please try again."
+            echo
+            password=""
         fi
     done
-    return "$password"
 }
 checkPkiAccess() {
     local address="$1"
