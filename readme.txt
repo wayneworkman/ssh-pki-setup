@@ -4,11 +4,30 @@ ssh pki setup
 This is a utility to quickly setup certificate based ssh authentication to many
 systems at once.
 
+The program will check for a public and private key in the $HOME folder of the currnet
+user, and also checks that they are not empty files. If the current user is `wayne`, 
+these files would be:
+
+/home/wayne/.ssh/id_rsa
+/home/wayne/.ssh/id_rsa.pub
+
+If the current user is root, they would be:
+
+/root/.ssh/id_rsa
+/root/.ssh/id_rsa.pub
+
+If BOTH of these files do not exist, or if EITHER of them are empty files, then both
+files are deleted automatically, and a new certificate pair is generated using 4096 bit
+strength, and placed in the $HOME/.ssh directory under their correct names.
+
+If you have a pre-existing key-pair that you would like to use, ensure these keys
+are named properly and placed in the correct locations as described above, with the
+correct permissions, such as 600.
+
 Define the systems you wish to setup inside of the working directory, in hosts.csv.
-Columns within this file must maintain their order. If you wish, you may leave the 
-some or all of the password column blank but will have to manually key in the missing
-passwords during installation. The header is required to be present, please do not
-remove it.
+Columns within this file must maintain their order, and the header must be maintained.
+If you wish, you may leave the some or all of the password column blank but will have 
+to manually key in the missing passwords during installation.
 
 The alias field is what will be used to define aliases for the remote systems. To use
 an alias at CLI, simply type `ssh` followed by a space and then the alias and hit enter. 
