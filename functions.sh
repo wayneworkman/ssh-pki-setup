@@ -23,15 +23,20 @@ readHosts() {
     hostsFile="${cwd}/hosts.csv"
     OLDIFS=$IFS
     IFS=","
-    dots "Reading $hostsFile"
+    dots "Reading \"$hostsFile\""
+    declare -A allAlias=()
+    declare -A allAccount=()
+    declare -A allAddress=()
+    declare -A allPort=()
     [ ! -f $hostsFile ] && { echo "$hostsFile file not found"; exit 99; }
-    while read alias user address port
+    while read alias account address port
     do
-        allAlias+=($alias)
-        allUser+=($user)
-        allAddress+=($address)
-        allPort+=($port)
-    done < $hostsFile
+        declare -A allAlias+=("$alias")
+        declare -A allAccount+=("$account")
+        declare -A allAddress+=("$address")
+        declare -A allPort+=("$port")
+    done < <(tr -d '\r' < "$hostsFile")
+    #done < $hostsFile
     IFS="$OLDIFS"
     echo "Done"
 }
@@ -42,11 +47,40 @@ checkPkiAccess() {
     pkiSet=$(ssh -o BatchMode=yes -o ConnectTimeout=5 $nodeUser@$ngmHostname "echo 'true'" 2>&1)
     if [[ "$pkiSet" == "true" ]]; then
         echo "Authorized"
+        return 0
     elif [[ "$pkiSet" == "Permission denied"* ]]; then
         echo "Not Authorized"
+        return 1
     else
         echo "Error!"
+        return 2
     fi
+}
+setupPki() {
+    address="$1"
+    account="$2"
+    pass="$3"
+    ping -i 5 -c 1 $address > /dev/null 2>&1
+    if [[ $? -eq 0 ]]; then
+        userHasRoot=$(sshpass -p$pass ssh $account@$address "echo $pass | sudo -i > /dev/null 2>&1;echo \$?")
+
+
+        if [[ "$userHasRoot" == "0" ]]; then
+            #The user given can be root, setup ssh pki.
+            destinationDir=$(sshpass -p$pass ssh $account@$address "echo ~")
+            sshpass -p$pass scp $HOME/.ssh/id_rsa.pub $account@$address:$destinationDir
+            rootDir=$(sshpass -p$pass ssh $account@$address "echo $pass | sudo -i > /dev/null 2>&1;echo ~")
+            sshpass -p$pass ssh $account@$address "echo $pass | sudo -i > /dev/null 2>&1;mkdir -p $rootDir/.ssh;cat $destinationDir/id_rsa.pub >> /.ssh/authorized_keys;rm -f $destinationDir/id_rsa.pub"
+            checkPkiAccess
+        else
+            echo
+            echo "  Account \"$account\" cannot become root on \"$address\"."
+            echo "  You must to provide a different account for this address."
+            echo
+        fi
+    fi
+
+
 }
 checkOrInstallPackage() {
     package="$1"
