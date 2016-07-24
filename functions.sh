@@ -26,27 +26,39 @@ readHosts() {
     readarray -t allAccount < <(cut -d, -f2 $hostsFile)
     readarray -t allAddress < <(cut -d, -f3 $hostsFile)
     readarray -t allPort < <(cut -d, -f4 $hostsFile)
+    readarray -t allPass < <(cut -d, -f5 $hostsFile)
     allAlias=("${allAlias[@]:1}")
     allAccount=("${allAccount[@]:1}")
     allAddress=("${allAddress[@]:1}")
     allPort=("${allPort[@]:1}")
+    allPass=("${allPass[@]:1}")
     echo "Done"
+}
+userHasRoot() {
+    address="$1"
+    account="$2"
+    password="$3"
+    port="$4"
+    userHasRoot=$(sshpass -p$password ssh -o StrictHostKeyChecking=no -o LogLevel=ERROR -o Port=$port $account@$address "echo $password | sudo -i > /dev/null 2>&1;echo \$?")
+    return $?
 }
 askForPassword() {
     address="$1"
     account="$2"
     password=""
+    port="$3"
     while [[ -z $password ]]; do
         echo
         echo "  Please provide the password for the account \"$account\" at"
         echo "  the address \"$address\""
         echo
         echo "  Type \"s\" to skip."
+        echo
         echo -n "  Password: "
         read password
         echo
         if [[ ! "$password" == "s" ]]; then
-            userHasRoot=$(sshpass -p$password ssh -o StrictHostKeyChecking=no -o LogLevel=ERROR $account@$address "echo $password | sudo -i > /dev/null 2>&1;echo \$?")
+            userHasRoot $address $account $password $port
             if [[ "$?" -eq "0" ]]; then
                 return 0
             else
@@ -65,10 +77,11 @@ askForPassword() {
 checkPkiAccess() {
     address="$1"
     account="$2"
+    port="$3"
     dots "Checking access to $address using account $account"
-    ping -i 5 -c 1 $address > /dev/null 2>&1
+    doPing $address
     if [[ $? -eq 0 ]]; then
-        pkiSet=$(ssh -o BatchMode=yes -o ConnectTimeout=5 $account@$address "echo 'true'" 2>&1)
+        pkiSet=$(ssh -o BatchMode=yes -o ConnectTimeout=5 -o Port=$port $account@$address "echo 'true'" 2>&1)
         if [[ "$pkiSet" == "true" ]]; then
             echo "Authorized"
             return 0
@@ -77,22 +90,30 @@ checkPkiAccess() {
             return 1
         fi
     else
-        echo "No Response!"
+        echo "No Response from $address !"
         return 2
     fi
+}
+doPing() {
+    address=$1
+    ping -i 5 -c 1 $address > /dev/null 2>&1
+    return $?
 }
 setupPki() {
     address="$1"
     account="$2"
     password="$3"
-    ping -i 5 -c 1 $address > /dev/null 2>&1
+    port="$4"
+    dots "Setting up ssh pki for \"$account\"@\"$address\""
+    doPing $address
     if [[ $? -eq 0 ]]; then
-        destinationDir=$(sshpass -p$password ssh $account@$address "echo ~")
-        sshpass -p$password scp $HOME/.ssh/id_rsa.pub $account@$address:$destinationDir
-        rootDir=$(sshpass -p$password ssh $account@$address "echo $password | sudo -i > /dev/null 2>&1;echo ~")
-        sshpass -p$password ssh $account@$address "echo $password | sudo -i > /dev/null 2>&1;mkdir -p $rootDir/.ssh;cat $destinationDir/id_rsa.pub >> $rootDir/.ssh/authorized_keys;rm -f $destinationDir/id_rsa.pub"
+        destinationDir=$(sshpass -p$password ssh -o Port=$port $account@$address "echo ~")
+        sshpass -p$password scp -o Port=$port $HOME/.ssh/id_rsa.pub $account@$address:$destinationDir
+        rootDir=$(sshpass -p$password ssh -o Port=$port $account@$address "echo $password | sudo -i > /dev/null 2>&1;echo ~")
+        sshpass -p$password ssh -o Port=$port $account@$address "echo $password | sudo -i > /dev/null 2>&1;mkdir -p $rootDir/.ssh;cat $destinationDir/id_rsa.pub >> $rootDir/.ssh/authorized_keys;rm -f $destinationDir/id_rsa.pub"
+       echo "Complete"
     else
-        echo "No Response!"
+        echo "No Response from $address !"
     fi
 }
 checkOrInstallPackage() {
