@@ -5,7 +5,6 @@ dots() {
     return 0
 }
 banner() {
-
 clear
 echo "          _             _    _            _               ";
 echo "         | |           | |  (_)          | |              ";
@@ -33,6 +32,35 @@ readHosts() {
     allPort=("${allPort[@]:1}")
     echo "Done"
 }
+askForPassword() {
+    address="$1"
+    account="$2"
+    password=""
+    while [[ -z $password ]]; do
+        echo
+        echo "  Please provide the password for the account \"$account\" at"
+        echo "  the address \"$address\""
+        echo
+        echo "  Type \"s\" to skip."
+        echo -n "  Password: "
+        read password
+        if [[ ! "$password" == "s" ]]; then
+            userHasRoot=$(sshpass -p$password ssh $account@$address "echo $password | sudo -i > /dev/null 2>&1;echo \$?")
+            if [[ "$?" -eq "0" ]]; then
+                return 0
+            else
+                echo
+                echo "  Either account \"$account\" cannot become root, or password is bad."
+                echo "  Please try again."
+                echo
+                password=""
+            fi
+        else
+            password=""
+            return 1
+        fi
+    done
+}
 checkPkiAccess() {
     address="$1"
     account="$2"
@@ -54,30 +82,17 @@ checkPkiAccess() {
 setupPki() {
     address="$1"
     account="$2"
-    pass="$3"
+    password="$3"
     ping -i 5 -c 1 $address > /dev/null 2>&1
     if [[ $? -eq 0 ]]; then
-        userHasRoot=$(sshpass -p$pass ssh $account@$address "echo $pass | sudo -i > /dev/null 2>&1;echo \$?")
-
-
-        if [[ "$userHasRoot" == "0" ]]; then
-            #The user given can be root, setup ssh pki.
-            destinationDir=$(sshpass -p$pass ssh $account@$address "echo ~")
-            sshpass -p$pass scp $HOME/.ssh/id_rsa.pub $account@$address:$destinationDir
-            rootDir=$(sshpass -p$pass ssh $account@$address "echo $pass | sudo -i > /dev/null 2>&1;echo ~")
-            sshpass -p$pass ssh $account@$address "echo $pass | sudo -i > /dev/null 2>&1;mkdir -p $rootDir/.ssh;cat $destinationDir/id_rsa.pub >> /.ssh/authorized_keys;rm -f $destinationDir/id_rsa.pub"
-            checkPkiAccess
-        else
-            echo
-            echo "  Account \"$account\" cannot become root on \"$address\"."
-            echo "  You must to provide a different account for this address."
-            echo
-        fi
+        destinationDir=$(sshpass -p$password ssh $account@$address "echo ~")
+        sshpass -p$password scp $HOME/.ssh/id_rsa.pub $account@$address:$destinationDir
+        rootDir=$(sshpass -p$password ssh $account@$address "echo $password | sudo -i > /dev/null 2>&1;echo ~")
+        sshpass -p$password ssh $account@$address "echo $password | sudo -i > /dev/null 2>&1;mkdir -p $rootDir/.ssh;cat $destinationDir/id_rsa.pub >> $rootDir/.ssh/authorized_keys;rm -f $destinationDir/id_rsa.pub"
+        checkPkiAccess
     else
         echo "Address \"$address\" did not respond to ping!"
     fi
-
-
 }
 checkOrInstallPackage() {
     package="$1"

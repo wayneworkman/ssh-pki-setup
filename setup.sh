@@ -8,5 +8,11 @@ checkSelfForCerts
 readHosts
 for ((i=0;i<${#allAddress[@]};++i)); do
     checkPkiAccess ${allAddress[i]} ${allAccount[i]}
-    [[ ! $? -eq 0 ]] && echo "need pki"
+    if [[ "$?" -eq "1" ]]; then
+        askForPassword ${allAddress[i]} ${allAccount[i]}
+        if [[ "$password" != "1" && ! -z "$password" ]]; then
+            setupPki ${allAddress[i]} ${allAccount[i]} $password
+            checkPkiAccess ${allAddress[i]} ${allAccount[i]}
+        fi
+    fi
 done
