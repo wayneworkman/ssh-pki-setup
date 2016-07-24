@@ -43,7 +43,7 @@ checkPkiAccess() {
         if [[ "$pkiSet" == "true" ]]; then
             echo "Authorized"
             return 0
-        else [[ "$pkiSet" == "Permission denied"* ]]; then
+        else
             echo "Not Authorized"
             return 1
         fi
