@@ -10,27 +10,29 @@
 
  2. Change to the ssh-pki-directory:
 
-  - `cd ssh-pki-setup`
+ - `cd ssh-pki-setup`
 
  3. Modify hosts.csv as needed.
 
-  - Use your favorite text editor, or vi:
-  - `vi hosts.csv`
+ - Use your favorite text editor, or vi:
+ - `vi hosts.csv`
 
  4. Run the setup script:
 
-  - `./setup.sh`
+ - `./setup.sh`
 
  5. Try it out.
 
-  - `ssh <alias>`
-  - Examples:
-  - `ssh fog-server`
-  - `ssh 10.0.0.1`
+ - `ssh <alias>`
+
+ ## Examples:
+
+ - `ssh fog-server`
+ - `ssh 10.0.0.1`
 
 ## What is this for?
 
-This is a utility to quickly setup certificate based ssh authentication to many
+ This is a utility to quickly setup certificate based ssh authentication to many
 systems at once.
 
 ## How it works
