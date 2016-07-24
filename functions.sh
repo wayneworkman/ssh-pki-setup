@@ -5,18 +5,18 @@ dots() {
     return 0
 }
 banner() {
-clear
-echo "          _             _    _            _               ";
-echo "         | |           | |  (_)          | |              ";
-echo "  ___ ___| |__    _ __ | | ___   ___  ___| |_ _   _ _ __  ";
-echo " / __/ __| '_ \  | '_ \| |/ / | / __|/ _ \ __| | | | '_ \ ";
-echo " \__ \__ \ | | | | |_) |   <| | \__ \  __/ |_| |_| | |_) |";
-echo " |___/___/_| |_| | .__/|_|\_\_| |___/\___|\__|\__,_| .__/ ";
-echo "                 | |                               | |    ";
-echo "                 |_|                               |_|    ";
-echo
-echo
-echo
+    clear
+    echo "          _             _    _            _               ";
+    echo "         | |           | |  (_)          | |              ";
+    echo "  ___ ___| |__    _ __ | | ___   ___  ___| |_ _   _ _ __  ";
+    echo " / __/ __| '_ \  | '_ \| |/ / | / __|/ _ \ __| | | | '_ \ ";
+    echo " \__ \__ \ | | | | |_) |   <| | \__ \  __/ |_| |_| | |_) |";
+    echo " |___/___/_| |_| | .__/|_|\_\_| |___/\___|\__|\__,_| .__/ ";
+    echo "                 | |                               | |    ";
+    echo "                 |_|                               |_|    ";
+    echo
+    echo
+    echo
 }
 readHosts() {
     hostsFile="${cwd}/hosts.csv"
@@ -35,54 +35,56 @@ readHosts() {
     echo "Done"
 }
 userHasRoot() {
-    address="$1"
-    account="$2"
-    password="$3"
-    port="$4"
-    userHasRoot=$(sshpass -p$password ssh -o StrictHostKeyChecking=no -o LogLevel=ERROR -o Port=$port $account@$address "echo $password | sudo -i > /dev/null 2>&1;echo \$?")
-    return $?
+    local address="$1"
+    local account="$2"
+    local password="$3"
+    local port="$4"
+    local userHasRoot=$(sshpass -p$password ssh -o StrictHostKeyChecking=no -o LogLevel=ERROR -o Port=$port $account@$address "echo $password | sudo -i > /dev/null 2>&1;echo \$?")
+    return $userHasRoot
 }
 askForPassword() {
-    address="$1"
-    account="$2"
-    password=""
-    port="$3"
+    local address="$1"
+    local account="$2"
+    local password=""
+    local port="$3"
     while [[ -z $password ]]; do
         echo
         echo "  Please provide the password for the account \"$account\" at"
         echo "  the address \"$address\""
         echo
-        echo "  Type \"s\" to skip."
+        echo "  Type [Enter] to skip."
         echo
         echo -n "  Password: "
         read password
         echo
-        if [[ ! "$password" == "s" ]]; then
-            userHasRoot $address $account $password $port
-            if [[ "$?" -eq "0" ]]; then
+        if [[ -z $password ]]; then
+            echo
+            echo "  You have chosen to skip providing the password."
+            echo "  Be aware that this may not work properly!"
+            return 0
+        else
+            userHasRoot "$address" "$account" "$password" "$port"
+            if [[ $? -eq 0 ]]; then
                 return 0
             else
                 echo
-                echo "  Either account \"$account\" cannot become root, or password is bad."
-                echo "  Please try again."
+                echo "  Either account \"$account\" cannot become root, or"
+                echo "  the password is bad/required. Please try again."
                 echo
                 password=""
             fi
-        else
-            password=""
-            return 1
         fi
     done
 }
 checkPkiAccess() {
-    address="$1"
-    account="$2"
-    port="$3"
+    local address="$1"
+    local account="$2"
+    local port="$3"
     dots "Checking access to $address using account $account"
-    doPing $address
+    doPing "$address"
     if [[ $? -eq 0 ]]; then
-        pkiSet=$(ssh -o BatchMode=yes -o ConnectTimeout=5 -o Port=$port $account@$address "echo 'true'" 2>&1)
-        if [[ "$pkiSet" == "true" ]]; then
+        pkiSet=$(ssh -o BatchMode=yes -o ConnectTimeout=5 -o "Port=$port" "$account@$address" "echo 'true'" 2>&1)
+        if [[ $pkiSet == true ]]; then
             echo "Authorized"
             return 0
         else
@@ -90,67 +92,55 @@ checkPkiAccess() {
             return 1
         fi
     else
-        echo "No Response from $address !"
+        echo "No Response from $address!"
         return 2
     fi
 }
 doPing() {
-    address=$1
-    ping -i 5 -c 1 $address > /dev/null 2>&1
+    local address="$1"
+    ping -i 5 -c 1 "$address" > /dev/null 2>&1
     return $?
 }
 setupPki() {
-    address="$1"
-    account="$2"
-    password="$3"
-    port="$4"
+    local address="$1"
+    local account="$2"
+    local password="$3"
+    local port="$4"
     dots "Setting up ssh pki for \"$account\"@\"$address\""
-    doPing $address
+    doPing "$address"
     if [[ $? -eq 0 ]]; then
-        destinationDir=$(sshpass -p$password ssh -o Port=$port $account@$address "echo ~")
-        sshpass -p$password scp -o Port=$port $HOME/.ssh/id_rsa.pub $account@$address:$destinationDir
-        rootDir=$(sshpass -p$password ssh -o Port=$port $account@$address "echo $password | sudo -i > /dev/null 2>&1;echo ~")
-        sshpass -p$password ssh -o Port=$port $account@$address "echo $password | sudo -i > /dev/null 2>&1;mkdir -p $rootDir/.ssh;cat $destinationDir/id_rsa.pub >> $rootDir/.ssh/authorized_keys;rm -f $destinationDir/id_rsa.pub"
-       echo "Complete"
+        local destinationDir=$(sshpass -p"$password" ssh -o "Port=$port" "$account@$address" "echo \$HOME")
+        sshpass -p$password scp -o "Port=$port" $HOME/.ssh/id_rsa.pub "$account@$address:$destinationDir"
+        local rootDir=$(sshpass -p"$password" ssh -o "Port=$port" "$account@$address" "echo $password | sudo -i > /dev/null 2>&1;echo \$HOME")
+        sshpass -p"$password" ssh -o "Port=$port" $account@$address "echo $password | sudo -i > /dev/null 2>&1;mkdir -p $rootDir/.ssh;cat $destinationDir/id_rsa.pub >> $rootDir/.ssh/authorized_keys;rm -f $destinationDir/id_rsa.pub"
+        echo "Complete"
     else
-        echo "No Response from $address !"
+        echo "No Response from $address!"
     fi
 }
 checkOrInstallPackage() {
-    package="$1"
-    packageLocation=""
+    local package="$1"
+    local packageLocation=""
     dots "Checking package $package"
-    packageLocation=$(command -v $package)
+    local packageLocation=$(command -v $package)
     if [[ -e "$packageLocation" ]]; then
         echo "Already Installed"
     else
-        useYum=$(command -v yum)
-        useAptGet=$(command -v apt-get)
-        useDnf=$(command -v dnf)
+        local useYum=$(command -v yum)
+        local useAptGet=$(command -v apt-get)
+        local useDnf=$(command -v dnf)
         if [[ -e "$useDnf" ]]; then
-            dnf install $package -y > /dev/null 2>&1
-            if [[ "$?" -eq "0" ]]; then
-                echo "Installed"
-            else
-                echo "Failed"
-            fi
+            dnf install "$package" -y > /dev/null 2>&1
         elif [[ -e "$useYum" ]]; then
-            yum install $package -y > /dev/null 2>&1
-            if [[ "$?" -eq "0" ]]; then
-                echo "Installed"
-            else
-                echo "Failed"
-            fi
+            yum install "$package" -y > /dev/null 2>&1
+            [[ $? -eq 0 ]] && echo "Installed" || echo "Failed"
         elif [[ -e "$useAptGet" ]]; then
-            apt-get install $package -y  > /dev/null 2>&1
-            if [[ "$?" -eq "0" ]]; then
-                echo "Installed"
-            else
-                echo "Failed"
-            fi
+            apt-get install "$package" -y  > /dev/null 2>&1
         else
             echo "Unable to determine repository manager"
+            return 1
         fi
+        [[ $? -eq 0 ]] && echo "Installed" || echo "Failed"
     fi
 }
 checkSelfForCerts() {
@@ -171,15 +161,15 @@ checkSelfForCerts() {
     fi
 }
 writeAlias() {
-address="$1"
-account="$2"
-port="$3"
-alias="$4"
-dots "Creating alias \"$alias\" for \"$address\""
-outfile="$HOME/.ssh/config"
-echo "Host $alias" >> $outfile
-echo "    User $account" >> $outfile
-echo "    HostName $address" >> $outfile
-echo "    Port $port" >> $outfile
-echo "Done"
+    local address="$1"
+    local account="$2"
+    local port="$3"
+    local alias="$4"
+    dots "Creating alias \"$alias\" for \"$address\""
+    local outfile="$HOME/.ssh/config"
+    echo "Host $alias" >> $outfile
+    echo "    User $account" >> $outfile
+    echo "    HostName $address" >> $outfile
+    echo "    Port $port" >> $outfile
+    echo "Done"
 }
