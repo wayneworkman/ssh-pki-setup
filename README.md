@@ -49,7 +49,7 @@ these files would typically be:
 - `/root/.ssh/id_rsa.pub`
 
 - If EITHER of these files do not exist, or if EITHER of them are empty files, then both
-files are deleted automatically, and a new certificate pair is generated using 4096 bit
+files are DELETED automatically, and a new certificate pair is generated using 4096 bit
 strength, and placed in the $HOME/.ssh directory under their correct names.
 
 - If you have a pre-existing key-pair that you would like to use, ensure these keys
