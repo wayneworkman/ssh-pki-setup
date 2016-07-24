@@ -26,7 +26,7 @@
   - `ssh <alias>`
 
  ## Examples:
-
+---
   - `ssh fog-server`
   - `ssh 10.0.0.1`
 
