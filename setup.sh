@@ -19,6 +19,9 @@ for ((i=0;i<${#allAddress[@]};++i)); do
         if [[ "$?" == "0" && ! -z "$password" ]]; then
             setupPki ${allAddress[i]} ${allAccount[i]} $password ${allPort[i]}
             checkPkiAccess ${allAddress[i]} ${allAccount[i]} ${allPort[i]}
+            if [[ $? -eq 0 ]]; then
+                writeAlias ${allAddress[i]} ${allAccount[i]} ${allPort[i]} ${allAlias[i]}
+            fi
         fi
     fi
 done

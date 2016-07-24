@@ -170,3 +170,16 @@ checkSelfForCerts() {
         echo "Present"
     fi
 }
+writeAlias() {
+address="$1"
+account="$2"
+port="$3"
+alias="$4"
+dots "Creating alias \"$alias\" for \"$address\""
+outfile="$HOME/.ssh/config"
+echo "Host $alias" >> $outfile
+echo "    User $account" >> $outfile
+echo "    HostName $address" >> $outfile
+echo "    Port $port" >> $outfile
+echo "Done"
+}
