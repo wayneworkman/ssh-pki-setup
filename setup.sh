@@ -12,8 +12,8 @@ for ((i=0;i<${#allAddress[@]};++i)); do
     if [[ $? -eq 1 ]]; then
         password="${allPass[i]}"
         if [[ -z $password ]]; then
-            askForPassword "${allAddress[i]}" "${allAccount[i]}" "${allPort[i]}"
-            password="$?"
+            askForPassword "${allAddress[i]}" "${allAccount[i]}" "${allPort[i]}" "$i"
+            password="${allPass[i]}"
         else
             userHasRoot "${allAddress[i]}" "${allAccount[i]}" "$password" "${allPort[i]}"
         fi

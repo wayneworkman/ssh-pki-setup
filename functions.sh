@@ -51,6 +51,7 @@ askForPassword() {
     local account="$2"
     local password=""
     local port="$3"
+    local i="$4"
     while [[ -z $password ]]; do
         echo
         echo "  Please provide the password for the account \"$account\" at"
@@ -67,8 +68,9 @@ askForPassword() {
             echo "  Be aware that this may not work properly!"
             return 0
         else
+            allPass[$i]="$password"
             userHasRoot "$address" "$account" "$password" "$port"
-            [[ $? -eq 0 ]] && return "$password"
+            [[ $? -eq 0 ]] && return 0
             echo
             echo "  Either account \"$account\" cannot become root, or"
             echo "  the password is bad/required. Please try again."
