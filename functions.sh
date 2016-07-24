@@ -44,8 +44,9 @@ askForPassword() {
         echo "  Type \"s\" to skip."
         echo -n "  Password: "
         read password
+        echo
         if [[ ! "$password" == "s" ]]; then
-            userHasRoot=$(sshpass -p$password ssh $account@$address "echo $password | sudo -i > /dev/null 2>&1;echo \$?")
+            userHasRoot=$(sshpass -p$password ssh -o StrictHostKeyChecking=no -o LogLevel=ERROR $account@$address "echo $password | sudo -i > /dev/null 2>&1;echo \$?")
             if [[ "$?" -eq "0" ]]; then
                 return 0
             else
@@ -76,7 +77,8 @@ checkPkiAccess() {
             return 1
         fi
     else
-        echo "Address \"$address\" did not respond to ping!"
+        echo "No Response!"
+        return 2
     fi
 }
 setupPki() {
@@ -89,9 +91,8 @@ setupPki() {
         sshpass -p$password scp $HOME/.ssh/id_rsa.pub $account@$address:$destinationDir
         rootDir=$(sshpass -p$password ssh $account@$address "echo $password | sudo -i > /dev/null 2>&1;echo ~")
         sshpass -p$password ssh $account@$address "echo $password | sudo -i > /dev/null 2>&1;mkdir -p $rootDir/.ssh;cat $destinationDir/id_rsa.pub >> $rootDir/.ssh/authorized_keys;rm -f $destinationDir/id_rsa.pub"
-        checkPkiAccess
     else
-        echo "Address \"$address\" did not respond to ping!"
+        echo "No Response!"
     fi
 }
 checkOrInstallPackage() {
