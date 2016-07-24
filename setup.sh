@@ -6,11 +6,7 @@ checkOrInstallPackage ssh-keygen
 checkOrInstallPackage sshpass
 checkSelfForCerts
 readHosts
-
-cnt=0
-for i in "${allAddress[@]}"; do
-    checkPkiAccess $i ${allAccount[$cnt]};
+for ((i=0;i<${#allAddress[@]};++i)); do
+    checkPkiAccess ${allAddress[i]} ${allAccount[i]}
     [[ ! $? -eq 0 ]] && echo "need pki"
-    let cnt+=1
 done
-cnt=0
