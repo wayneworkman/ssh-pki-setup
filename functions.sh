@@ -80,7 +80,7 @@ askForPassword() {
             fi
         fi
     done
-    echo $password
+    echo "$password"
 }
 checkPkiAccess() {
     local address="$1"
