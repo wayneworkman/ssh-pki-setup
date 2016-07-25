@@ -39,7 +39,7 @@ userHasRoot() {
     local account="$2"
     local password="$3"
     local port="$4"
-    local userHasRoot=$(sshpass -p$password ssh -o StrictHostKeyChecking=no -o LogLevel=ERROR -o Port=$port $account@$address "echo $password | sudo -S 'whoami'")
+    local userHasRoot=$(sshpass -p$password ssh -t -o StrictHostKeyChecking=no -o LogLevel=ERROR -o Port=$port $account@$address "echo $password | sudo -S 'whoami'")
     if [[ "$userHasRoot" == "root" ]]; then
         return 0
     else
@@ -114,8 +114,8 @@ setupPki() {
     if [[ $? -eq 0 ]]; then
         local destinationDir=$(sshpass -p"$password" ssh -o "Port=$port" "$account@$address" "echo \$HOME")
         sshpass -p$password scp -o "Port=$port" $HOME/.ssh/id_rsa.pub "$account@$address:$destinationDir"
-        local rootDir=$(sshpass -p"$password" ssh -o "Port=$port" "$account@$address" "echo $password | sudo -i > /dev/null 2>&1;echo \$HOME")
-        sshpass -p"$password" ssh -o "Port=$port" $account@$address "echo $password | sudo -i > /dev/null 2>&1;mkdir -p $rootDir/.ssh;cat $destinationDir/id_rsa.pub >> $rootDir/.ssh/authorized_keys;rm -f $destinationDir/id_rsa.pub"
+        local rootDir=$(sshpass -p"$password" ssh -t -o "Port=$port" "$account@$address" "echo $password | sudo -i > /dev/null 2>&1;echo \$HOME")
+        sshpass -p"$password" ssh -t -o "Port=$port" $account@$address "echo $password | sudo -i > /dev/null 2>&1;mkdir -p $rootDir/.ssh;cat $destinationDir/id_rsa.pub >> $rootDir/.ssh/authorized_keys;rm -f $destinationDir/id_rsa.pub"
         echo "Complete"
     else
         echo "No Response from $address!"
