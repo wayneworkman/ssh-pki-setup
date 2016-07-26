@@ -12,14 +12,14 @@ setupPki() {
     dots "Setting up ssh pki for \"$account\"@\"$address\""
     doPing "$address"
     if [[ $? -eq 0 ]]; then
-        sshpass -p"$password" ssh -q -t -o "Port=$port" "$account@$address" "echo $password | sudo -S sed -i.old '/requiretty/d' /etc/sudoers"
-        local destinationDir=$(sshpass -p"$password" ssh -q -o "Port=$port" "$account@$address" "echo ~")
-        sshpass -p$password scp -o "Port=$port" $HOME/.ssh/id_rsa.pub "$account@$address:$destinationDir"
-        local rootDir=$(sshpass -p"$password" ssh -q -o "Port=$port" "$account@$address" "echo $password | sudo -S echo ~")
+        sshpass -p"$password" ssh -q -t -o "Port=$port" "$account@$address" "echo $password | sudo -S sed -i.old '/requiretty/d' /etc/sudoers" > /dev/null 2>&1
+        local destinationDir=$(sshpass -p"$password" ssh -q -o "Port=$port" "$account@$address" "echo ~") > /dev/null 2>&1
+        sshpass -p$password scp -o "Port=$port" $HOME/.ssh/id_rsa.pub "$account@$address:$destinationDir" > /dev/null 2>&1
+        local rootDir=$(sshpass -p"$password" ssh -q -o "Port=$port" "$account@$address" "echo $password | sudo -S echo ~") > /dev/null 2>&1
         local destinationFile="$destinationDir/id_rsa.pub"
         local rootSsh="$rootDir/.ssh"
         local rootFile="$rootDir/.ssh/authorized_keys"
-        sshpass -p"$password" ssh -q -o "Port=$port" $account@$address "echo $password | sudo -i > /dev/null 2>&1;mkdir -p $rootSsh;cat $destinationFile >> $rootFile;rm -f $destinationFile"
+        sshpass -p"$password" ssh -q -o "Port=$port" $account@$address "echo $password | sudo -i > /dev/null 2>&1;mkdir -p $rootSsh;cat $destinationFile >> $rootFile;rm -f $destinationFile" > /dev/null 2>&1
         echo "Complete"
     else
         echo "No Response from $address!"
@@ -106,10 +106,10 @@ checkPkiAccess() {
     local address="$1"
     local account="$2"
     local port="$3"
-    dots "Checking access to $address using account $account"
+    dots "Checking ssh pki access to $address using account $account"
     doPing "$address"
     if [[ $? -eq 0 ]]; then
-        pkiSet=$(ssh -o BatchMode=yes -o ConnectTimeout=5 -o "Port=$port" "$account@$address" "echo 'true'" 2>&1)
+        pkiSet=$(ssh -o BatchMode=yes -o ConnectTimeout=7 -o StrictHostKeyChecking=no -o LogLevel=ERROR -o "Port=$port" "$account@$address" "echo 'true'" 2>&1)
         if [[ $pkiSet == true ]]; then
             echo "Authorized"
             return 0
