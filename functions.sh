@@ -82,7 +82,8 @@ askForPassword() {
         echo "  Type [Enter] to skip."
         echo
         echo -n "  Password: "
-        read password
+        read -s password
+        echo
         echo
         if [[ -z $password ]]; then
             echo
