@@ -60,7 +60,8 @@ userHasRoot() {
     local account="$2"
     local password="$3"
     local port="$4"
-    local userHasRoot=$(sshpass -p$password ssh -q -o StrictHostKeyChecking=no -o LogLevel=ERROR -o Port=$port $account@$address "echo $password | sudo -S 'whoami'")
+    local userHasRoot=$(sshpass -p$password ssh -t -q -o StrictHostKeyChecking=no -o LogLevel=ERROR -o Port=$port $account@$address "echo $password | sudo -S 'whoami'")
+    local userHasRoot=$(echo $userHasRoot | sed 's/[^a-z]*//g')
     if [[ "$userHasRoot" == "root" ]]; then
         return 0
     else
