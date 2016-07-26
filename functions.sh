@@ -4,6 +4,27 @@ dots() {
     printf " * %s%*.*s" "$1" 0 $((70-${#1})) "$pad"
     return 0
 }
+setupPki() {
+    local address="$1"
+    local account="$2"
+    local password="$3"
+    local port="$4"
+    dots "Setting up ssh pki for \"$account\"@\"$address\""
+    doPing "$address"
+    if [[ $? -eq 0 ]]; then
+        sshpass -p"$password" ssh -q -t -o "Port=$port" "$account@$address" "echo $password | sudo -S sed -i.old '/requiretty/d' /etc/sudoers"
+        local destinationDir=$(sshpass -p"$password" ssh -q -o "Port=$port" "$account@$address" "echo ~")
+        sshpass -p$password scp -o "Port=$port" $HOME/.ssh/id_rsa.pub "$account@$address:$destinationDir"
+        local rootDir=$(sshpass -p"$password" ssh -q -o "Port=$port" "$account@$address" "echo $password | sudo -S echo ~")
+        local destinationFile="$destinationDir/id_rsa.pub"
+        local rootSsh="$rootDir/.ssh"
+        local rootFile="$rootDir/.ssh/authorized_keys"
+        sshpass -p"$password" ssh -q -o "Port=$port" $account@$address "echo $password | sudo -i > /dev/null 2>&1;mkdir -p $rootSsh;cat $destinationFile >> $rootFile;rm -f $destinationFile"
+        echo "Complete"
+    else
+        echo "No Response from $address!"
+    fi
+}
 banner() {
     clear
     echo "          _             _    _            _               ";
@@ -39,7 +60,7 @@ userHasRoot() {
     local account="$2"
     local password="$3"
     local port="$4"
-    local userHasRoot=$(sshpass -p$password ssh -t -o StrictHostKeyChecking=no -o LogLevel=ERROR -o Port=$port $account@$address "echo $password | sudo -S 'whoami'")
+    local userHasRoot=$(sshpass -p$password ssh -q -o StrictHostKeyChecking=no -o LogLevel=ERROR -o Port=$port $account@$address "echo $password | sudo -S 'whoami'")
     if [[ "$userHasRoot" == "root" ]]; then
         return 0
     else
@@ -103,23 +124,6 @@ doPing() {
     local address="$1"
     ping -i 5 -c 1 "$address" > /dev/null 2>&1
     return $?
-}
-setupPki() {
-    local address="$1"
-    local account="$2"
-    local password="$3"
-    local port="$4"
-    dots "Setting up ssh pki for \"$account\"@\"$address\""
-    doPing "$address"
-    if [[ $? -eq 0 ]]; then
-        local destinationDir=$(sshpass -p"$password" ssh -o "Port=$port" "$account@$address" "echo \$HOME")
-        sshpass -p$password scp -o "Port=$port" $HOME/.ssh/id_rsa.pub "$account@$address:$destinationDir"
-        local rootDir=$(sshpass -p"$password" ssh -t -o "Port=$port" "$account@$address" "echo $password | sudo -i > /dev/null 2>&1;echo \$HOME")
-        sshpass -p"$password" ssh -t -o "Port=$port" $account@$address "echo $password | sudo -i > /dev/null 2>&1;mkdir -p $rootDir/.ssh;cat $destinationDir/id_rsa.pub >> $rootDir/.ssh/authorized_keys;rm -f $destinationDir/id_rsa.pub"
-        echo "Complete"
-    else
-        echo "No Response from $address!"
-    fi
 }
 checkOrInstallPackage() {
     local package="$1"

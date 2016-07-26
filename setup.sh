@@ -15,9 +15,9 @@ for ((i=0;i<${#allAddress[@]};++i)); do
             askForPassword "${allAddress[i]}" "${allAccount[i]}" "${allPort[i]}" "$i"
             password="${allPass[i]}"
         else
-            userHasRoot "${allAddress[i]}" "${allAccount[i]}" "$password" "${allPort[i]}"
+            result=$(userHasRoot "${allAddress[i]}" "${allAccount[i]}" "$password" "${allPort[i]}")
         fi
-        if [[ $? -eq 0 ]]; then
+        if [[ $result -eq 0 ]]; then
             password="${allPass[i]}"
             if [[ ! -z $password ]]; then
                 setupPki "${allAddress[i]}" "${allAccount[i]}" "${allPass[i]}" "${allPort[i]}"
