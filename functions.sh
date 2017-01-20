@@ -15,7 +15,7 @@ setupPki() {
         sshpass -p"$password" ssh -q -t -o "Port=$port" "$account@$address" "echo $password | sudo -S sed -i.old '/requiretty/d' /etc/sudoers" > /dev/null 2>&1
         local destinationDir=$(sshpass -p"$password" ssh -q -o "Port=$port" "$account@$address" "echo ~") > /dev/null 2>&1
         sshpass -p$password scp -o "Port=$port" $HOME/.ssh/id_rsa.pub "$account@$address:$destinationDir" > /dev/null 2>&1
-        local rootDir=$(sshpass -p"$password" ssh -q -o "Port=$port" "$account@$address" "echo $password | sudo -S echo ~") > /dev/null 2>&1
+        local rootDir=$(sshpass -p"$password" ssh -q -o "Port=$port" -t "$account@$address" "echo $password | sudo -S echo ~") > /dev/null 2>&1
         local destinationFile="$destinationDir/id_rsa.pub"
         local rootSsh="$rootDir/.ssh"
         local rootFile="$rootDir/.ssh/authorized_keys"
